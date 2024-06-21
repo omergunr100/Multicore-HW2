@@ -1,8 +1,13 @@
 // Simple testbed for concurrent Set implementations
 // the entry-point for the testbed is the static runTest() method
 
+import java.util.Arrays;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
+
 class TestSet extends Thread
 {
+    public volatile AtomicLong operations = new AtomicLong(0); 
 	private final Set	set;
 	private final int	keyRange;
 	private final int	percentContains;
@@ -16,14 +21,23 @@ class TestSet extends Thread
 		this.percentAdd = percentAdd;
 	}
 
+    @Override
 	public void run()
 	{
-		try {
-			while (true) {
-				/* TODO: execute a random op (and collect details) */
-			}
-		}
-		catch (InterruptedException iex) { /* Done */ }
+        Random rand = new Random();
+        int percentileRemove = percentContains + percentAdd;
+        while (!interrupted()) {
+            // perform a random operation
+            int rand_int = rand.nextInt(1, 100);
+            if (rand_int <= percentContains) {
+                set.contains(rand.nextInt(0, keyRange));
+            } else if (rand_int < percentileRemove) {
+                set.add(rand.nextInt(0, keyRange));
+            } else {
+                set.remove(rand.nextInt(0, keyRange));
+            }
+            operations.incrementAndGet();
+        }
 	}
 
 	/** This is the base method for the TestSet class, which executes a single test.
@@ -55,7 +69,20 @@ class TestSet extends Thread
 		for (int i = 0; i < numThreads; ++i) {
 			threads[i].interrupt();
 		}
-
-		/* TODO: print details */
+        
+        // wait a bit
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException iex) {}
+        
+        // wait for threads to finish
+        for (int i = 0; i < numThreads; ++i) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException iex) {}
+        }
+        
+        // sum up and print the total number of operations
+        System.out.println("Total operations: " + Arrays.stream(threads).mapToLong(t -> t.operations.get()).sum());
 	}
 }
