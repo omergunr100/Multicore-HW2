@@ -30,18 +30,12 @@ public class BSTFine<T extends Comparable<T>> {
     }
     
     private final Node sentinel = new Node();
-    
+
     public boolean Search(T value) {
         Node prev = this.sentinel;
-        Node curr;
-        // capture initial node
-        prev.lock();
-        curr = prev.Left;
-        if (curr == null) {
-            prev.unlock();
-            return false;
-        }
-        curr.lock();
+        Node curr = prev.Left;
+
+        if (curr == null) return false;
 
         boolean found = false;
         while (!found) {
@@ -82,9 +76,9 @@ public class BSTFine<T extends Comparable<T>> {
             release.unlock();
         }
         curr.unlock();
-        return true;
+        return false;
     }
-    
+
     public boolean Insert(T value) {
         Node prev = this.sentinel;
         Node curr;
@@ -97,7 +91,7 @@ public class BSTFine<T extends Comparable<T>> {
             return true;
         }
         curr.lock();
-        
+
         while (curr != null) {
             // keep track of previous node
             var release = prev;
@@ -143,7 +137,7 @@ public class BSTFine<T extends Comparable<T>> {
         // unreachable code
         return false;
     }
-    
+
     public boolean Delete(T value) {
         Node prev = this.sentinel;
         Node curr;
